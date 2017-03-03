@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.app.rakez.dungatrial1.ScrollingActivity">
+    <item
+        android:id="@+id/history"
+        android:orderInCategory="100"
+        android:title="Previous Order"
+        app:showAsAction="never" />
+</menu>
