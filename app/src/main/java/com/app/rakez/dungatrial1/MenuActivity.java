@@ -1,10 +1,12 @@
 package com.app.rakez.dungatrial1;
 
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.AlertDialog;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -56,6 +58,10 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
     private String tableNo;
     private String tableState;
 
+    //variables for previous order
+    private List<String> previousOrderMenuName = new ArrayList<>();
+    private List<String> previousOrderMenuQty = new ArrayList<>();
+    private String previousOrder;
 
     String ipAddress;
 
@@ -102,6 +108,9 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
 
     }
 
+
+
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if(item.getItemId()==android.R.id.home){
@@ -110,6 +119,7 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
             finish();
         }
         if(item.getItemId() == R.id.history){
+            makePreviousOrderRequest();
 
         }
         return super.onOptionsItemSelected(item);
@@ -118,6 +128,7 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
         final ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Loading");
         pDialog.show();
+
 
 
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, "http://"+ipAddress+"/orderapp/menuJson.php", null, new Response.Listener<JSONArray>() {
@@ -187,14 +198,17 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
 
     @Override
     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-        Log.d("xyz","This is data "+searchMenuName.get(i)+searchMenuId.get(i));
-        orderId.add(searchMenuId.get(i));
-        orderQty.add("1");
-        prepareData(Integer.parseInt(searchMenuId.get(i)));
+        if(!orderId.contains(searchMenuId.get(i))){
+            Log.d("xyz","This is data "+searchMenuName.get(i)+searchMenuId.get(i));
+            orderId.add(searchMenuId.get(i));
+            orderQty.add("1");
+            prepareData(Integer.parseInt(searchMenuId.get(i)));
+        }
         searchView.setQuery("",true);
         searchMenuName.clear();
         searchMenuId.clear();
         menuAdapter.notifyDataSetChanged();
+
 
     }
     public void prepareData(int position){
@@ -204,30 +218,77 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
     }
 
     @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent in = new Intent(getApplicationContext(),NavActivity.class);
+        startActivity(in);
+        finish();
+    }
+
+    @Override
     public void onClick(View view) {
 
         if (view.getId()==R.id.orderUpdate){
-            String menuId=null;
-            String menuQty=null;
-            for(int i = 0 ; i < orderList.size() ; i++){
-                Log.d("This","This is sample order"+orderList.get(i).getItemName()+orderList.get(i).getItemQty()+orderList.get(i).getItemId());
-                if(i==0){
-                    menuId = orderList.get(i).getItemId();
-                    menuQty = orderList.get(i).getItemQty();
-                }else{
-                    menuId = menuId+","+orderList.get(i).getItemId();
-                    menuQty = menuQty+","+orderList.get(i).getItemQty();
+            AlertDialog.Builder adb = new AlertDialog.Builder(MenuActivity.this);
+            adb.setTitle("Confirm");
+            adb.setMessage("Are you sure about sending order?");
+            adb.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    String menuId=null;
+                    String menuQty=null;
+                    for(int j = 0 ; j < orderList.size() ; j++){
+                        Log.d("This","This is sample order"+orderList.get(j).getItemName()+orderList.get(j).getItemQty()+orderList.get(j).getItemId());
+                        if(j==0){
+                            menuId = orderList.get(j).getItemId();
+                            menuQty = orderList.get(j).getItemQty();
+                        }else{
+                            menuId = menuId+","+orderList.get(j).getItemId();
+                            menuQty = menuQty+","+orderList.get(j).getItemQty();
+                        }
+                    }
+                    if(!menuId.equals(null)){
+                        makePostRequest(tableNo,menuId,menuQty,"2");
+                    }
                 }
-            }
-            if(!menuId.equals(null)){
-                makePostRequest(tableNo,menuId,menuQty,"2");
-            }
+            });
+            adb.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                }
+            });
+            adb.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                }
+            });
+            adb.show();
         }
         if(view.getId()==R.id.orderCheckout){
-            makePostCheckout(tableNo);
-            Intent in = new Intent(getApplicationContext(),NavActivity.class);
-            startActivity(in);
-            finish();
+            AlertDialog.Builder adb = new AlertDialog.Builder(MenuActivity.this);
+            adb.setTitle("Confirm");
+            adb.setMessage("Are you sure about checkout?");
+            adb.setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    makePostCheckout(tableNo);
+                    Intent in = new Intent(getApplicationContext(),NavActivity.class);
+                    startActivity(in);
+                    finish();
+                }
+            });
+            adb.setNegativeButton("No", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                }
+            });
+            adb.setNeutralButton("Cancel", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                }
+            });
+            adb.show();
+
         }
 
     }
@@ -302,4 +363,62 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
         };
         AppController.getInstance().addToRequestQueue(sr);
     }
+    private void makePreviousOrderRequest(){
+        final ProgressDialog pDialog = new ProgressDialog(this);
+        pDialog.setMessage("Loading");
+        pDialog.show();
+
+
+        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, "http://"+ipAddress+"/orderapp/previous_order.php?tableNo="+tableNo, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+                previousOrderMenuName.clear();
+                previousOrderMenuQty.clear();
+                Log.d("size of the","Sizw is rakjsdifns response "+response.length());
+                for(int i = 0;i<response.length();i++){
+                    try {
+                        JSONObject table = (JSONObject) response.get(i);
+                        String qty = table.getString("qty");
+                        String name = table.getString("name");
+                        previousOrderMenuQty.add(qty);
+                        previousOrderMenuName.add(name);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                pDialog.hide();
+                pDialog.dismiss();
+                preparePreviousOrder();
+
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                pDialog.hide();
+                pDialog.dismiss();
+            }
+        });
+        AppController.getInstance().addToRequestQueue(req);
+    }
+
+    public void preparePreviousOrder(){
+        previousOrder = "";
+        for(int i = 0; i< previousOrderMenuName.size(); i++){
+            previousOrder = previousOrder + previousOrderMenuName.get(i)+"  "+previousOrderMenuQty.get(i)+"\n";
+        }
+        AlertDialog.Builder adb = new AlertDialog.Builder(MenuActivity.this);
+        adb.setTitle("Confirm");
+        adb.setMessage(previousOrder);
+        adb.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        adb.show();
+    }
+
 }

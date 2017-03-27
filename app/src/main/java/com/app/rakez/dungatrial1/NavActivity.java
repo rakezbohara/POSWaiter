@@ -1,10 +1,12 @@
 package com.app.rakez.dungatrial1;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -47,7 +49,7 @@ public class NavActivity extends AppCompatActivity
     private ArrayList<String> searchResultStatus = new ArrayList<String>();
     private SwipeRefreshLayout swipeRefreshLayout;
 
-
+    Snackbar sb;
 
     String ipAddress;
 
@@ -134,8 +136,12 @@ public class NavActivity extends AppCompatActivity
             finish();
         }
         if(id == R.id.setIP){
+            Bundle source = new Bundle();
             Intent in = new Intent(getApplicationContext(),setIP.class);
+            source.putString("requestFrom","home");
+            in.putExtras(source);
             startActivity(in);
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -230,14 +236,15 @@ public class NavActivity extends AppCompatActivity
         return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics()));
     }
     private void makeJsonArrayRequest(){
-       /* final ProgressDialog pDialog = new ProgressDialog(this);
+        final ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Loading");
         pDialog.show();
-     */
+
 
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, "http://"+ipAddress+"/orderapp/tableJson.php", null, new Response.Listener<JSONArray>() {
             @Override
             public void onResponse(JSONArray response) {
+
                 tableNo.clear();
                 status.clear();
                 Log.d("size of the","Sizw is rakjsdifns response "+response.length());
@@ -256,7 +263,8 @@ public class NavActivity extends AppCompatActivity
 
                 }
                 Log.d("size of the","Data is "+tableNo.size());
-                //pDialog.hide();
+                pDialog.hide();
+                pDialog.dismiss();
                 prepareData(tableNo,status);
                 swipeRefreshLayout.setRefreshing(false);
 
@@ -264,8 +272,13 @@ public class NavActivity extends AppCompatActivity
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                //pDialog.hide();
+                pDialog.hide();
+                pDialog.dismiss();
                 swipeRefreshLayout.setRefreshing(false);
+                View view = findViewById(R.id.drawer_layout);
+                sb = Snackbar.make(view, "Cannot connect to network", Snackbar.LENGTH_INDEFINITE);
+                sb.setAction("Action", null);
+                sb.show();
 
             }
         });

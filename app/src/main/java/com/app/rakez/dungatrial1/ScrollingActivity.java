@@ -92,8 +92,12 @@ public class ScrollingActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.setIP) {
+            Bundle source = new Bundle();
             Intent in = new Intent(getApplicationContext(),setIP.class);
+            source.putString("requestFrom","login");
+            in.putExtras(source);
             startActivity(in);
+            finish();
 
         }
 

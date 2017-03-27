@@ -15,10 +15,13 @@ public class setIP extends AppCompatActivity {
 
     EditText ipAddress;
     Button saveIp;
+    String requestFrom;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_set_ip);
+        Bundle source = getIntent().getExtras();
+        requestFrom = source.getString("requestFrom");
         ipAddress = (EditText) findViewById(R.id.ipAddress);
         saveIp = (Button) findViewById(R.id.saveIP);
         saveIp.setOnClickListener(new View.OnClickListener() {
@@ -37,5 +40,20 @@ public class setIP extends AppCompatActivity {
             }
         });
     }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Intent in;
+        if(requestFrom.equals("home")){
+            in = new Intent(getApplicationContext(),NavActivity.class);
+
+        }else{
+            in = new Intent(getApplicationContext(),ScrollingActivity.class);
+        }
+        startActivity(in);
+        finish();
+    }
+
 
 }
