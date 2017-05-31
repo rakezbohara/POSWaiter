@@ -7,4 +7,9 @@
         android:orderInCategory="100"
         android:title="Previous Order"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/deleteOrder"
+        android:orderInCategory="101"
+        android:title="Delete Order"
+        app:showAsAction="never" />
 </menu>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/deleteOrderOrderNo"
+        android:layout_alignParentLeft="true"
+        android:textSize="30sp"
+        android:textColor="@color/pureBlack"
+        android:text="Order No"
+        android:layout_marginLeft="15dp"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/deleteOrderItem"
+        android:text="Item 1\n Item2\nItem3"
+        android:layout_below="@+id/deleteOrderOrderNo"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remove"
+        android:id="@+id/deleteOrderOrderButton"
+        android:textSize="20sp"
+        android:layout_alignParentRight="true"
+        />
+
+</RelativeLayout>

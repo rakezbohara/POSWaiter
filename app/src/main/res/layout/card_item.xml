@@ -10,7 +10,6 @@
         android:layout_height="wrap_content"
         android:id="@+id/cv"
         android:background="@color/pureWhite"
-
         >
 
             <TextView

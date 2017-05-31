@@ -1,12 +1,12 @@
 package com.app.rakez.dungatrial1;
 
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.app.AlertDialog;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -33,7 +33,6 @@ import com.android.volley.toolbox.StringRequest;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,6 +61,12 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
     private List<String> previousOrderMenuName = new ArrayList<>();
     private List<String> previousOrderMenuQty = new ArrayList<>();
     private String previousOrder;
+
+
+    //variable for delete order
+    static Dialog dialog;
+    RecyclerView deleteOrderRV;
+
 
     String ipAddress;
 
@@ -122,14 +127,70 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
             makePreviousOrderRequest();
 
         }
+        if(item.getItemId() == R.id.deleteOrder){
+
+            //delete order dialog box
+            dialog = new Dialog(MenuActivity.this);
+            dialog.setTitle("Remove Order");
+            dialog.setContentView(R.layout.dialogdelete);
+            deleteOrderRV = (RecyclerView) dialog.findViewById(R.id.deleteOrderRV);
+
+
+            ArrayList<String> dt = new ArrayList<>();
+            requestDeletableOrder(dt);
+
+
+
+
+        }
         return super.onOptionsItemSelected(item);
     }
+
+    private void requestDeletableOrder(final ArrayList<String> dt) {
+
+        JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, "http://"+ipAddress+"/orderapp/deletable_order.php?tableNo="+tableNo, null, new Response.Listener<JSONArray>() {
+            @Override
+            public void onResponse(JSONArray response) {
+
+                Log.d("size of the","Size is response "+response.length());
+                for(int i = 0;i<response.length();i++){
+                    try {
+                        JSONObject table = (JSONObject) response.get(i);
+                        String orderNo = table.getString("order_no");
+                        dt.add("Order No.  "+orderNo);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                prepareDeleteOrder(dt);
+
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+
+            }
+        });
+        AppController.getInstance().addToRequestQueue(req);
+
+    }
+
+    private void prepareDeleteOrder(ArrayList<String> dt) {
+        DeleteOrderAdapter deleteOrderAdapter  = new DeleteOrderAdapter(getApplicationContext(),dt,tableNo,ipAddress);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(dialog.getContext());
+        deleteOrderRV.setLayoutManager(linearLayoutManager);
+        deleteOrderRV.setItemAnimator(new DefaultItemAnimator());
+        deleteOrderRV.setAdapter(deleteOrderAdapter);
+        dialog.show();
+    }
+
     private void makeJsonArrayRequest(){
         final ProgressDialog pDialog = new ProgressDialog(this);
         pDialog.setMessage("Loading");
         pDialog.show();
-
-
 
         JsonArrayRequest req = new JsonArrayRequest(Request.Method.GET, "http://"+ipAddress+"/orderapp/menuJson.php", null, new Response.Listener<JSONArray>() {
             @Override
@@ -155,6 +216,7 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
                 }
                 //Log.d("size of the","Data is "+tableNo.size());
                 pDialog.hide();
+                pDialog.dismiss();
                 //prepareData(tableNo,status);
 
             }
@@ -162,6 +224,7 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
             @Override
             public void onErrorResponse(VolleyError error) {
                 pDialog.hide();
+                pDialog.dismiss();
 
             }
         });
@@ -419,6 +482,10 @@ public class MenuActivity extends AppCompatActivity implements SearchView.OnQuer
             }
         });
         adb.show();
+    }
+
+    public  static void dismissDialog(){
+        dialog.dismiss();
     }
 
 }
